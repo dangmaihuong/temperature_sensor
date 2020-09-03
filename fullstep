@@ -1,0 +1,65 @@
+Temperature sensor
+
+Name: Dang Mai Huong Student number: e1800943
+
+EMBEDDED LINUX 1. Modify file /boot/config.txt and add following line to end of it dtoverlay=w1-gpio,gpiopin=4 restart raspberry after the config.txt modification above
+
+Load the 1-Wire driers are loaded by following command: sudo modprobe w1-gpio sudo modprobe w1-therm
+
+Connect the sensor hardware to the rPI
+
+Check the sensor is detected by seeing if a device is listed on the 1-Wire bus: cat /sys/bus/w1/devices/w1_bus_master1/w1_master_slave_count 1
+
+Get the sensor ID by reading the w1_master_slaves file: 28-000006afa7bc
+
+Quick check for correct operation of the sensor is to read the sensor file: cat /sys/bus/w1/devices/28-000006afa7bc/w1_slave
+
+Reading the sensor using a perl script
+
+Install rrdtool sudo apt-get install rrdtool
+rrdtool create rPItemp.rrd --step 300
+DS:temp:GAUGE:600:-30:50
+RRA:AVERAGE:0.5:1:12
+RRA:AVERAGE:0.5:1:288
+RRA:AVERAGE:0.5:12:168
+RRA:AVERAGE:0.5:12:720
+RRA:AVERAGE:0.5:288:365 9. Create a file to create graph: #!/bin/bash RRDPATH="/home/pi/temperature/" RAWCOLOUR="#FF0000" TRENDCOLOUR="#0000FF"
+
+Edited 2012/12/9 to add running averages to hourly and daily graphs
+#hour rrdtool graph $RRDPATH/hour.png --start -6h
+DEF:temp=$RRDPATH/rPItemp.rrd:temp:AVERAGE
+CDEF:trend=temp,1800,TREND
+LINE2:temp$RAWCOLOUR:"Hourly Raspberry PI temperature"
+LINE1:trend$TRENDCOLOUR:"30 min average"
+
+#day rrdtool graph $RRDPATH/day.png --start -1d
+DEF:temp=$RRDPATH/rPItemp.rrd:temp:AVERAGE
+CDEF:trend=temp,21600,TREND
+LINE2:temp$RAWCOLOUR:"Daily Raspberry PI temperature"
+LINE1:trend$TRENDCOLOUR:"6h average"
+
+#week rrdtool graph $RRDPATH/week.png --start -1w
+DEF:temp=$RRDPATH/rPItemp.rrd:temp:AVERAGE
+LINE2:temp$RAWCOLOUR:"Weekly Raspberry PI temperature" \
+
+#month rrdtool graph $RRDPATH/month.png --start -1m
+DEF:temp=$RRDPATH/rPItemp.rrd:temp:AVERAGE
+LINE1:temp$RAWCOLOUR:"Monthly Raspberry PI temperature" \
+
+#year rrdtool graph $RRDPATH/year.png --start -1y
+DEF:temp=$RRDPATH/rPItemp.rrd:temp:AVERAGE
+LINE1:temp$RAWCOLOUR:"Yearly Raspberry PI temperature" \
+
+Create file to get the temperature Nano graph2 #!/usr/bin/perl $mods = cat /proc/modules; if ($mods =~ /w1_gpio/ && $mods =~ /w1_therm/) { print "w1 modules already loaded \n"; } else { print "loading w1 modules \n"; $mod_gpio = sudo modprobe w1-gpio; $mod_them = sudo modprobe w1-therm; }
+
+$sensor_temp = cat /sys/bus/w1/devices/28-*/w1_slave 2>&1; if ($sensor_temp !~ /No such file or directory/) { if ($sensor_temp !~ /NO/) { $sensor_temp =~ /t=(\d+)/i; $tempreature = (($1/1000)-6); # My sensor seems to read about 6 degrees high, so quick fudge to fix value $rrd_out = /usr/bin/rrdtool update /home/pi/rPItemp.rrd N:$tempreature;
+
+    print "rPI temp = $tempreature\n";
+    exit;
+} die "Error locating sensor file or sensor CRC was invalid";
+
+} 11. And then we need to access the crontab script to add crontab -e
+
+Create picture to my web server • Install apt-get install apache2 • Copy images to my web server by command scp *.png e1800943@shell.puv.fi:public_html
+
+After that in my public_html has graphs
