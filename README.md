@@ -1,2 +1,2 @@
 # temperature_sensor
-The project using Raspberry Pi and a temperature sensor to detect the environment temperature and keep the statics then display on chart.
+The project uses Raspberry Pi and a temperature sensor to detect the environment temperature and keep the statistics then display on chart.
